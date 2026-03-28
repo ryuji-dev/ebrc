@@ -57,18 +57,6 @@ export function ChangePasswordModal({ trigger }: { trigger: React.ReactNode }) {
                 return;
             }
 
-            // first_login 플래그 업데이트
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                await (supabase
-                    .from('user_profiles') as any)
-                    .update({
-                        first_login: false,
-                        last_password_change: new Date().toISOString()
-                    })
-                    .eq('id', user.id);
-            }
-
             setSuccess(true);
 
             // 2초 후 자동 로그아웃 및 이동

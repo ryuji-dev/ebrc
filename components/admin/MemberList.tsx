@@ -33,10 +33,10 @@ export function MemberList({
       <CardHeader className="p-8 pb-4">
         <CardTitle className="text-2xl text-white flex items-center gap-3 font-normal">
           <Users className="w-6 h-6 text-primary" />
-          가입 교우 목록
+          가입 사용자 목록
         </CardTitle>
         <CardDescription className="text-zinc-500 font-normal">
-          전체 교우 명단입니다. (페이지당 10명)
+          전체 사용자 명단입니다. (페이지당 10명)
         </CardDescription>
       </CardHeader>
       <CardContent className="px-4 pt-0 md:px-8 md:pt-0 flex flex-col">
@@ -73,10 +73,9 @@ export function MemberList({
                       <span className="text-white font-medium truncate">{u.full_name}</span>
                       <span className={cn(
                         "px-1.5 py-0.5 rounded text-[10px] font-medium tracking-wide uppercase",
-                        u.role === 'admin' ? "bg-primary/20 text-primary" :
-                        u.role === 'leader' ? "bg-primary/20 text-primary" : "bg-zinc-800 text-zinc-500"
+                        u.role === 'admin' ? "bg-primary/20 text-primary" : "bg-zinc-800 text-zinc-500"
                       )}>
-                        {u.role === 'admin' ? '목사님' : u.role === 'leader' ? '리더' : '교우'}
+                        {u.role === 'admin' ? '관리자' : '사용자'}
                       </span>
                     </div>
                     <div className="text-xs text-zinc-500 truncate font-normal">{u.email}</div>
@@ -125,10 +124,9 @@ export function MemberList({
                     <td className="py-5 text-center">
                       <span className={cn(
                         "px-3 py-1 rounded-full text-[10px] font-normal tracking-widest uppercase border border-transparent",
-                        u.role === 'admin' ? "bg-primary/20 text-primary border-primary/10" :
-                          u.role === 'leader' ? "bg-primary/20 text-primary border-primary/10" : "bg-zinc-800 text-zinc-500"
+                        u.role === 'admin' ? "bg-primary/20 text-primary border-primary/10" : "bg-zinc-800 text-zinc-500"
                       )}>
-                        {u.role === 'admin' ? '목사님' : u.role === 'leader' ? '리더' : '교우'}
+                        {u.role === 'admin' ? '관리자' : '사용자'}
                       </span>
                     </td>
                     <td className="py-5 text-center">

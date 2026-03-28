@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
 
         const profile = profileData as { role: string } | null;
 
-        // 관리자/리더 권한 확인
-        if (profile?.role !== 'admin' && profile?.role !== 'leader') {
-            return NextResponse.json({ error: "Forbidden. 관리자 또는 리더만 계정을 삭제할 수 있습니다." }, { status: 403 });
+        // 관리자 권한 확인
+        if (profile?.role !== 'admin') {
+            return NextResponse.json({ error: "Forbidden. 관리자만 계정을 삭제할 수 있습니다." }, { status: 403 });
         }
 
         const { userId } = await req.json();

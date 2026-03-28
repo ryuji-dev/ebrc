@@ -17,12 +17,8 @@ export interface Database {
           id: string;
           email: string;
           full_name: string;
-          role: 'user' | 'leader' | 'admin';
-          share_with_leaders: boolean;
+          role: 'user' | 'admin';
           cumulative_readthrough_count: number;
-          is_locked: boolean;
-          first_login: boolean;
-          last_password_change: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -30,12 +26,8 @@ export interface Database {
           id: string;
           email: string;
           full_name: string;
-          role?: 'user' | 'leader' | 'admin';
-          share_with_leaders?: boolean;
+          role?: 'user' | 'admin';
           cumulative_readthrough_count?: number;
-          is_locked?: boolean;
-          first_login?: boolean;
-          last_password_change?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -43,12 +35,8 @@ export interface Database {
           id?: string;
           email?: string;
           full_name?: string;
-          role?: 'user' | 'leader' | 'admin';
-          share_with_leaders?: boolean;
+          role?: 'user' | 'admin';
           cumulative_readthrough_count?: number;
-          is_locked?: boolean;
-          first_login?: boolean;
-          last_password_change?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -304,10 +292,6 @@ export interface Database {
         Args: Record<string, never>;
         Returns: boolean;
       };
-      is_leader_or_admin: {
-        Args: Record<string, never>;
-        Returns: boolean;
-      };
       check_and_complete_reading_plan: {
         Args: { p_plan_id: string };
         Returns: {
@@ -319,7 +303,7 @@ export interface Database {
       };
     };
     Enums: {
-      user_role: 'user' | 'leader' | 'admin';
+      user_role: 'user' | 'admin';
       devotion_plan_frequency: 'daily' | 'weekly' | 'monthly';
       reading_plan_status: 'not_started' | 'in_progress' | 'completed' | 'abandoned';
     };

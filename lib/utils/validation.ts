@@ -2,20 +2,14 @@ import { z } from 'zod';
 
 // 로그인 폼 검증
 export const loginSchema = z.object({
-  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+  email: z.string().min(1, '이메일을 입력하세요'),
   password: z.string().min(1, '비밀번호를 입력하세요'),
 });
 
 // 비밀번호 변경 폼 검증
 export const changePasswordSchema = z.object({
   currentPassword: z.string().optional(),
-  newPassword: z
-    .string()
-    .min(12, '비밀번호는 최소 12자 이상이어야 합니다')
-    .regex(/[A-Z]/, '대문자를 최소 1개 포함해야 합니다')
-    .regex(/[a-z]/, '소문자를 최소 1개 포함해야 합니다')
-    .regex(/[0-9]/, '숫자를 최소 1개 포함해야 합니다')
-    .regex(/[^A-Za-z0-9]/, '특수문자를 최소 1개 포함해야 합니다'),
+  newPassword: z.string().min(4, '비밀번호는 최소 4자 이상이어야 합니다'),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: '비밀번호가 일치하지 않습니다',
@@ -57,18 +51,15 @@ export const readingCompletionSchema = z.object({
   memo: z.string().max(500).optional(),
 });
 
-// 관리자 - 계정 발급 검증
-export const provisionAccountSchema = z.object({
+// 회원가입 폼 검증
+export const signupSchema = z.object({
   email: z.string().email('올바른 이메일 형식이 아닙니다'),
   fullName: z.string().min(1, '이름을 입력하세요').max(50),
-  role: z.enum(['user', 'leader', 'admin']),
-  temporaryPassword: z
-    .string()
-    .min(12, '임시 비밀번호는 최소 12자 이상이어야 합니다')
-    .regex(/[A-Z]/, '대문자를 포함해야 합니다')
-    .regex(/[a-z]/, '소문자를 포함해야 합니다')
-    .regex(/[0-9]/, '숫자를 포함해야 합니다')
-    .regex(/[^A-Za-z0-9]/, '특수문자를 포함해야 합니다'),
+  password: z.string().min(4, '비밀번호는 최소 4자 이상이어야 합니다'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: '비밀번호가 일치하지 않습니다',
+  path: ['confirmPassword'],
 });
 
 // 관리자 - 템플릿 생성 검증
@@ -86,12 +77,28 @@ export const csvRowSchema = z.object({
   notes: z.string().optional(),
 });
 
+// 비밀번호 찾기 폼 검증
+export const forgotPasswordSchema = z.object({
+  email: z.string().email('올바른 이메일 형식이 아닙니다'),
+});
+
+// 비밀번호 재설정 폼 검증
+export const resetPasswordSchema = z.object({
+  newPassword: z.string().min(4, '비밀번호는 최소 4자 이상이어야 합니다'),
+  confirmPassword: z.string(),
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: '비밀번호가 일치하지 않습니다',
+  path: ['confirmPassword'],
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 export type DevotionPlanInput = z.infer<typeof devotionPlanSchema>;
 export type CheckinInput = z.infer<typeof checkinSchema>;
 export type ReadingPlanCreateInput = z.infer<typeof readingPlanCreateSchema>;
 export type ReadingCompletionInput = z.infer<typeof readingCompletionSchema>;
-export type ProvisionAccountInput = z.infer<typeof provisionAccountSchema>;
+export type SignupInput = z.infer<typeof signupSchema>;
 export type TemplateCreateInput = z.infer<typeof templateCreateSchema>;
 export type CSVRowInput = z.infer<typeof csvRowSchema>;
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;

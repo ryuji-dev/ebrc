@@ -3,8 +3,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, ShieldAlert, History } from "lucide-react";
 import { Database } from "@/types/database.types";
-import { AdminTabs } from "@/components/admin/AdminTabs";
-import { AccountManagement } from "@/components/admin/AccountManagement";
 import { MemberList } from "@/components/admin/MemberList";
 
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
@@ -19,8 +17,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   const { page, tab } = await searchParams;
   const currentPage = parseInt(page || '1');
   const itemsPerPage = 10;
-  // 기본 탭은 'accounts'
-  const currentTab = tab || 'accounts';
+  const currentTab = tab || 'members';
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -33,14 +30,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
     .eq("id", user.id)
     .single();
 
-  const userProfile = profile as { role: 'user' | 'leader' | 'admin' } | null;
+  const userProfile = profile as { role: 'user' | 'admin' } | null;
 
-  if (userProfile?.role !== 'admin' && userProfile?.role !== 'leader') {
+  if (userProfile?.role !== 'admin') {
     return (
       <div className="p-6 flex flex-col items-center justify-center min-h-[60vh] space-y-4 animate-in fade-in duration-700">
         <ShieldAlert className="w-16 h-16 text-red-500/50 mb-2" />
         <h1 className="text-2xl text-white">접근 권한이 없습니다</h1>
-        <p className="text-zinc-500">관리자 또는 리더만 접근 가능한 페이지입니다.</p>
+        <p className="text-zinc-500">관리자만 접근 가능한 페이지입니다.</p>
       </div>
     );
   }
@@ -83,17 +80,15 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   let totalUsers: number | null = 0;
   let totalPages = 0;
 
-  if (currentTab === 'members') {
-    const { data: usersData, count } = await adminClient
-      .from("user_profiles")
-      .select("id, email, full_name, role, created_at", { count: 'exact' })
-      .order("created_at", { ascending: false })
-      .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
-    
-    memberList = usersData as UserProfile[] | null;
-    totalUsers = count;
-    totalPages = Math.ceil((totalUsers || 0) / itemsPerPage);
-  }
+  const { data: usersData, count } = await adminClient
+    .from("user_profiles")
+    .select("id, email, full_name, role, created_at", { count: 'exact' })
+    .order("created_at", { ascending: false })
+    .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
+
+  memberList = usersData as UserProfile[] | null;
+  totalUsers = count;
+  totalPages = Math.ceil((totalUsers || 0) / itemsPerPage);
 
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-1000">
@@ -105,7 +100,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
             관리자 콘솔
           </h1>
           <p className="text-zinc-400 text-base md:text-lg font-medium max-w-2xl">
-            교우들의 활동 정보를 확인하고 계정을 관리할 수 있는 공간입니다.
+            사용자들의 활동 정보를 확인하고 계정을 관리할 수 있는 공간입니다.
           </p>
         </div>
         <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[120%] bg-primary/10 blur-[120px] rounded-full pointer-events-none" />
@@ -154,21 +149,13 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         </Card>
       </div>
 
-      <AdminTabs />
-
-      {currentTab === 'accounts' && (
-        <AccountManagement />
-      )}
-
-      {currentTab === 'members' && (
-        <MemberList 
-          memberList={memberList}
-          todayCheckinData={todayCheckinData}
-          currentUserId={user.id}
-          currentPage={currentPage}
-          totalPages={totalPages}
-        />
-      )}
+      <MemberList
+        memberList={memberList}
+        todayCheckinData={todayCheckinData}
+        currentUserId={user.id}
+        currentPage={currentPage}
+        totalPages={totalPages}
+      />
     </div>
   );
 }

@@ -7,7 +7,7 @@
 -- 1. ENUMS
 -- ============================================================
 
-CREATE TYPE user_role AS ENUM ('user', 'leader', 'admin');
+CREATE TYPE user_role AS ENUM ('user', 'admin');
 CREATE TYPE devotion_plan_frequency AS ENUM ('daily', 'weekly', 'monthly');
 CREATE TYPE reading_plan_status AS ENUM ('not_started', 'in_progress', 'completed', 'abandoned');
 
@@ -22,11 +22,7 @@ CREATE TABLE user_profiles (
   email TEXT NOT NULL,
   full_name TEXT NOT NULL,
   role user_role NOT NULL DEFAULT 'user',
-  share_with_leaders BOOLEAN NOT NULL DEFAULT false,
   cumulative_readthrough_count INTEGER NOT NULL DEFAULT 0,
-  is_locked BOOLEAN NOT NULL DEFAULT false,
-  first_login BOOLEAN NOT NULL DEFAULT true,
-  last_password_change TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -150,16 +146,24 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 현재 사용자가 leader 또는 admin인지 확인
-CREATE OR REPLACE FUNCTION is_leader_or_admin()
-RETURNS BOOLEAN AS $$
+-- 신규 회원 가입 시 user_profiles 자동 생성 트리거
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
 BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM user_profiles
-    WHERE id = auth.uid() AND role IN ('leader', 'admin')
+  INSERT INTO user_profiles (id, email, full_name, role)
+  VALUES (
+    NEW.id,
+    COALESCE(NEW.email, ''),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
+    'user'
   );
+  RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
 
 -- 읽기 완료 확인 후 계획 자동 완료 처리
 CREATE OR REPLACE FUNCTION check_and_complete_reading_plan(p_plan_id UUID)
@@ -225,7 +229,7 @@ ALTER TABLE user_bible_progress ENABLE ROW LEVEL SECURITY;
 
 -- user_profiles
 CREATE POLICY "본인 프로필 조회" ON user_profiles FOR SELECT
-  USING (auth.uid() = id OR is_leader_or_admin());
+  USING (auth.uid() = id OR is_admin());
 
 CREATE POLICY "본인 프로필 수정" ON user_profiles FOR UPDATE
   USING (auth.uid() = id);
@@ -235,8 +239,8 @@ CREATE POLICY "본인 경건계획 CRUD" ON devotion_plans FOR ALL
   USING (auth.uid() = user_id);
 
 -- devotion_checkins
-CREATE POLICY "본인 체크인 조회 또는 리더/관리자" ON devotion_checkins FOR SELECT
-  USING (auth.uid() = user_id OR is_leader_or_admin());
+CREATE POLICY "본인 체크인 조회 또는 관리자" ON devotion_checkins FOR SELECT
+  USING (auth.uid() = user_id OR is_admin());
 
 CREATE POLICY "본인 체크인 추가" ON devotion_checkins FOR INSERT
   WITH CHECK (auth.uid() = user_id);
@@ -247,22 +251,22 @@ CREATE POLICY "본인 체크인 수정" ON devotion_checkins FOR UPDATE
 CREATE POLICY "본인 체크인 삭제" ON devotion_checkins FOR DELETE
   USING (auth.uid() = user_id);
 
--- reading_plan_templates (모든 인증 사용자 읽기, 리더/관리자만 쓰기)
+-- reading_plan_templates (모든 인증 사용자 읽기, 관리자만 쓰기)
 CREATE POLICY "템플릿 전체 조회" ON reading_plan_templates FOR SELECT
   USING (auth.role() = 'authenticated');
 
-CREATE POLICY "리더/관리자만 템플릿 생성" ON reading_plan_templates FOR INSERT
-  WITH CHECK (is_leader_or_admin());
+CREATE POLICY "관리자만 템플릿 생성" ON reading_plan_templates FOR INSERT
+  WITH CHECK (is_admin());
 
-CREATE POLICY "리더/관리자만 템플릿 수정" ON reading_plan_templates FOR UPDATE
-  USING (is_leader_or_admin());
+CREATE POLICY "관리자만 템플릿 수정" ON reading_plan_templates FOR UPDATE
+  USING (is_admin());
 
 -- reading_plan_template_items
 CREATE POLICY "템플릿 항목 전체 조회" ON reading_plan_template_items FOR SELECT
   USING (auth.role() = 'authenticated');
 
-CREATE POLICY "리더/관리자만 항목 생성" ON reading_plan_template_items FOR INSERT
-  WITH CHECK (is_leader_or_admin());
+CREATE POLICY "관리자만 항목 생성" ON reading_plan_template_items FOR INSERT
+  WITH CHECK (is_admin());
 
 -- user_reading_plans
 CREATE POLICY "본인 읽기계획 CRUD" ON user_reading_plans FOR ALL

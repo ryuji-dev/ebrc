@@ -27,7 +27,7 @@ export default function DashboardLayout({
   const supabase = createClient();
 
   const [userEmail, setUserEmail] = useState('');
-  const [userRole, setUserRole] = useState<'user' | 'leader' | 'admin'>('user');
+  const [userRole, setUserRole] = useState<'user' | 'admin'>('user');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -39,23 +39,12 @@ export default function DashboardLayout({
         return;
       }
 
-      // 사용자 상세 프로필 조회 (역할 및 잠금 상태 확인)
+      // 사용자 프로필 조회 (역할 확인)
       const { data: profile } = await supabase
         .from('user_profiles')
-        .select('role, is_locked, first_login, email')
+        .select('role, email')
         .eq('id', user.id)
-        .single() as { data: { role: 'user' | 'leader' | 'admin'; is_locked: boolean; first_login: boolean; email: string } | null };
-
-      if (profile?.is_locked) {
-        await supabase.auth.signOut();
-        router.push('/login');
-        return;
-      }
-
-      if (profile?.first_login) {
-        router.push('/change-password');
-        return;
-      }
+        .single() as { data: { role: 'user' | 'admin'; email: string } | null };
 
       setUserEmail(profile?.email || user.email || '');
       setUserRole(profile?.role || 'user');
@@ -76,7 +65,7 @@ export default function DashboardLayout({
     { name: '프로필', href: '/profile', icon: User },
   ];
 
-  if (userRole === 'admin' || userRole === 'leader') {
+  if (userRole === 'admin') {
     navigation.push({ name: '관리자', href: '/admin', icon: Shield });
   }
 
@@ -99,11 +88,14 @@ export default function DashboardLayout({
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex items-center justify-between h-20 px-6">
-            <Link href="/dashboard" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
-              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-sm">
+            <Link href="/dashboard" className="flex items-center gap-4 hover:opacity-80 transition-opacity min-w-0">
+              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white shadow-sm flex-shrink-0">
                 <BookOpenText className="w-8 h-8" />
               </div>
-              <span className="text-2xl tracking-tighter text-white font-brand">BIBLIAN 365</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-2xl font-bold tracking-tighter text-white leading-tight font-brand">EBRC</span>
+                <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">에스라성경통독사경회 대학동아리</span>
+              </div>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -132,7 +124,7 @@ export default function DashboardLayout({
                   onClick={() => setSidebarOpen(false)}
                 >
                   <Icon className="w-5 h-5" />
-                  {item.name}
+                  <span className="truncate">{item.name}</span>
                   {isActive && (
                     <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-white rounded-r-full" />
                   )}
@@ -145,15 +137,13 @@ export default function DashboardLayout({
           <div className="p-4">
             <div className="glass-dark rounded-3xl p-4 border-white/5 space-y-3">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-sm text-primary">
-                  {userRole === 'admin' ? 'P' : userRole === 'leader' ? 'L' : 'M'}
+                <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center text-sm text-primary flex-shrink-0">
+                  {userRole === 'admin' ? 'A' : 'M'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-white/90 truncate">{userEmail}</div>
                   <div className="text-[10px] tracking-wider text-muted-foreground uppercase">
-                    {userRole === 'admin' && 'Pastor'}
-                    {userRole === 'leader' && 'Leader'}
-                    {userRole === 'user' && 'Member'}
+                    {userRole === 'admin' ? 'Admin' : 'Member'}
                   </div>
                 </div>
               </div>

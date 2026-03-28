@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 EBRC (Chongshin University Bible Reading Club) is a full-stack PWA for managing Bible reading plans, devotion check-ins, and member management. UI is entirely in Korean.
 
+**[Language Policy]**
+- **All communication, explanations, and answers to queries must be provided in Korean (한국어).**
+- Documentation within the code (comments) may remain in English where appropriate for technical clarity, but the primary interaction language is Korean.
+
 ## Tech Stack
 
 - **Framework**: Next.js 16 with App Router, React 19, TypeScript

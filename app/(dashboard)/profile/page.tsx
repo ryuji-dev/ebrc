@@ -14,10 +14,10 @@ export default async function ProfilePage() {
     .from('user_profiles')
     .select('role, email, full_name')
     .eq('id', user.id)
-    .single() as { data: { role: 'admin' | 'leader' | 'user'; email: string; full_name: string } | null };
+    .single() as { data: { role: 'admin' | 'user'; email: string; full_name: string } | null };
 
-  const roleLabel = profile?.role === 'admin' ? 'PASTOR' : profile?.role === 'leader' ? 'LEADER' : 'MEMBER';
-  const roleInitial = profile?.role === 'admin' ? 'P' : profile?.role === 'leader' ? 'L' : 'M';
+  const roleLabel = profile?.role === 'admin' ? 'ADMIN' : 'MEMBER';
+  const roleInitial = profile?.role === 'admin' ? 'A' : 'M';
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">

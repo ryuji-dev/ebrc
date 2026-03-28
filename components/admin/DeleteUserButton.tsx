@@ -15,7 +15,7 @@ export function DeleteUserButton({ userId, userName }: DeleteUserButtonProps) {
     const router = useRouter();
 
     const handleDelete = async () => {
-        if (!confirm(`${userName} 교우님의 계정을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 모든 데이터가 삭제됩니다.`)) {
+        if (!confirm(`${userName} 님의 계정을 정말 삭제하시겠습니까?\n이 작업은 되돌릴 수 없으며 모든 데이터가 삭제됩니다.`)) {
             return;
         }
 
