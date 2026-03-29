@@ -9,7 +9,7 @@ import { signupSchema } from '@/lib/utils/validation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BookOpenText } from 'lucide-react';
+import { UsersRound } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -65,7 +65,7 @@ export default function SignupPage() {
 
           <div className="flex flex-col items-center space-y-4">
             <div className="w-20 h-20 bg-primary rounded-[1.5rem] flex items-center justify-center text-white text-2xl">
-              <BookOpenText className="w-10 h-10" />
+              <UsersRound className="w-10 h-10" />
             </div>
             <h1 className="text-3xl tracking-tight text-white font-brand">회원가입</h1>
           </div>

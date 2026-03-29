@@ -9,7 +9,7 @@ export const loginSchema = z.object({
 // 비밀번호 변경 폼 검증
 export const changePasswordSchema = z.object({
   currentPassword: z.string().optional(),
-  newPassword: z.string().min(4, '비밀번호는 최소 4자 이상이어야 합니다'),
+  newPassword: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: '비밀번호가 일치하지 않습니다',
@@ -55,7 +55,7 @@ export const readingCompletionSchema = z.object({
 export const signupSchema = z.object({
   email: z.string().email('올바른 이메일 형식이 아닙니다'),
   fullName: z.string().min(1, '이름을 입력하세요').max(50),
-  password: z.string().min(4, '비밀번호는 최소 4자 이상이어야 합니다'),
+  password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: '비밀번호가 일치하지 않습니다',
@@ -84,7 +84,7 @@ export const forgotPasswordSchema = z.object({
 
 // 비밀번호 재설정 폼 검증
 export const resetPasswordSchema = z.object({
-  newPassword: z.string().min(4, '비밀번호는 최소 4자 이상이어야 합니다'),
+  newPassword: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다'),
   confirmPassword: z.string(),
 }).refine((data) => data.newPassword === data.confirmPassword, {
   message: '비밀번호가 일치하지 않습니다',

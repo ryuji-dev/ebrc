@@ -1,20 +1,27 @@
-# 📋 UI/UX Refinement: Bible Reading Table (`/reading`)
+# 📋 Feature Request: Competition-Ready Bible Reading System
 
-## 1. Issue: Chapter List Layout Fix
-- **Current State**: The chapter numbers (1, 2, 3...) are currently misaligned or displayed in an unintended layout (as seen in the first attached screenshot).
-- **Goal**: Refactor the chapter grid/list layout to match the second screenshot. 
-  - Each chapter should be in a clean, square or circular grid format.
-  - Ensure the responsive grid remains consistent across different screen sizes.
-  - Fix any flexbox or grid CSS that might be causing the current misalignment.
+## 1. Goal
+Implement a "Bible Reading Race" system where users must 'join' a plan, and their completion times are recorded with second-precision for fair ranking.
 
-## 2. Issue: Visual Distinction for New Testament
-- **Current State**: Both Old Testament (OT) and New Testament (NT) sections use the same theme color (Indigo).
-- **Goal**: Change the theme color for the **New Testament (신약)** sections to Tailwind CSS **`rose`** colors.
-  - Apply `rose-500` or `rose-600` for active/checked states and accents in the NT section.
-  - Keep the Old Testament (구약) as the current color (Indigo).
-  - This applies to progress bars, chapter check icons, and section headers within the NT.
+## 2. Database Schema Changes (Supabase/PostgreSQL)
+Please provide the SQL migration and update the types for the following:
+- **`user_plans` Table**: Create a table to manage user participation.
+  - `user_id`, `plan_id`, `status` (active/completed), `joined_at` (timestamp).
+- **Completion Timestamps**: Add the following fields to track the exact moment of completion:
+  - `ot_completed_at`: Old Testament completion time (TIMESTAMP with second precision).
+  - `nt_completed_at`: New Testament completion time (TIMESTAMP with second precision).
+  - `total_completed_at`: Full Bible completion time.
 
-## 3. Technical Requirements
-- Check `app/(dashboard)/reading/page.tsx` or the relevant sub-components in `components/reading/`.
-- Use Tailwind CSS classes for the color change.
-- Ensure the **Optimistic Update** logic remains intact while updating the UI components.
+## 3. Core Logic Requirements
+- **Participation Flow**: Users must click a "Join/Participate" button before they can start checking off chapters for a specific plan.
+- **Precision Tracking**: When a user checks the final chapter of the OT or NT, the system must automatically record the current server time into the respective `completed_at` field.
+- **Admin Monitoring**: 
+  - Create/Update an Admin Dashboard that lists all participating users.
+  - Display real-time progress (%) for each user.
+  - Show the exact completion time (e.g., `2026-03-29 17:05:23`) for those who have finished.
+  - Sort the list by completion time to show the "Race Standings."
+
+## 4. UI/UX Requirements
+- **Admin View**: A table-based layout showing [User Name | Progress | OT Finish Time | NT Finish Time | Status].
+- **User View**: A "Join this Plan" button for new plans, and a clear display of their own recorded finish times.
+- **Formatting**: All timestamps in the Admin view must display hours, minutes, and seconds clearly.

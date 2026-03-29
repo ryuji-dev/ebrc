@@ -75,3 +75,8 @@ export const BIBLE_BOOKS: BibleBook[] = [
 ];
 
 export const TOTAL_CHAPTERS = BIBLE_BOOKS.reduce((acc, book) => acc + book.chapters, 0);
+
+export const OT_BOOKS = BIBLE_BOOKS.filter(b => b.category === 'Old');
+export const NT_BOOKS = BIBLE_BOOKS.filter(b => b.category === 'New');
+export const TOTAL_OT_CHAPTERS = OT_BOOKS.reduce((acc, b) => acc + b.chapters, 0); // 929
+export const TOTAL_NT_CHAPTERS = NT_BOOKS.reduce((acc, b) => acc + b.chapters, 0); // 260

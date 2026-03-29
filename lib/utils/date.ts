@@ -80,6 +80,22 @@ export function isToday(date: string): boolean {
 }
 
 /**
+ * KST 기준 초 단위 타임스탬프 포맷 (예: 2026. 03. 29. 17:05:23)
+ */
+export function formatTimestampKST(timestamp: string): string {
+  return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(new Date(timestamp));
+}
+
+/**
  * 날짜 배열을 생성 (start부터 end까지)
  */
 export function getDateRange(start: Date, end: Date): string[] {

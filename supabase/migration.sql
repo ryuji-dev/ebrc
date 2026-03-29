@@ -119,6 +119,42 @@ CREATE TABLE user_bible_progress (
 );
 
 
+-- 성경읽기 계획 (관리자 생성)
+CREATE TABLE reading_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  created_by UUID REFERENCES auth.users(id),
+  book_ids INTEGER[] NOT NULL DEFAULT '{}',
+  total_chapters INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- 성경읽기 계획 참가자
+CREATE TABLE reading_plan_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  plan_id UUID NOT NULL REFERENCES reading_plans(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  completed_at TIMESTAMPTZ,
+  UNIQUE(plan_id, user_id)
+);
+
+-- 성경읽기 계획 진행 현황 (soft-delete 패턴)
+CREATE TABLE reading_plan_progress (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  plan_id UUID NOT NULL REFERENCES reading_plans(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  book_id INTEGER NOT NULL,
+  chapter INTEGER NOT NULL,
+  completed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  deleted_at TIMESTAMPTZ,
+  UNIQUE(plan_id, user_id, book_id, chapter)
+);
+
+
 -- ============================================================
 -- 3. INDEXES
 -- ============================================================
@@ -129,6 +165,10 @@ CREATE INDEX idx_user_reading_plans_user_id ON user_reading_plans(user_id);
 CREATE INDEX idx_user_reading_completions_user_id ON user_reading_completions(user_id);
 CREATE INDEX idx_user_reading_completions_plan_date ON user_reading_completions(plan_id, date);
 CREATE INDEX idx_user_bible_progress_user_year ON user_bible_progress(user_id, year);
+CREATE INDEX idx_reading_plans_created_by ON reading_plans(created_by);
+CREATE INDEX idx_reading_plan_participants_plan_id ON reading_plan_participants(plan_id);
+CREATE INDEX idx_reading_plan_participants_user_id ON reading_plan_participants(user_id);
+CREATE INDEX idx_reading_plan_progress_plan_user ON reading_plan_progress(plan_id, user_id);
 
 
 -- ============================================================
@@ -285,3 +325,45 @@ CREATE POLICY "본인 완료기록 삭제" ON user_reading_completions FOR DELET
 -- user_bible_progress
 CREATE POLICY "본인 성경진행 CRUD" ON user_bible_progress FOR ALL
   USING (auth.uid() = user_id);
+
+-- reading_plans
+ALTER TABLE reading_plans ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "활성 계획 전체 조회" ON reading_plans FOR SELECT
+  USING (is_active = true);
+CREATE POLICY "관리자 계획 관리" ON reading_plans FOR ALL
+  USING (is_admin());
+
+-- reading_plan_participants
+ALTER TABLE reading_plan_participants ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "참가자 전체 조회" ON reading_plan_participants FOR SELECT
+  USING (true);
+CREATE POLICY "본인 참가 관리" ON reading_plan_participants FOR ALL
+  USING (auth.uid() = user_id);
+
+-- reading_plan_progress
+ALTER TABLE reading_plan_progress ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "진행현황 전체 조회" ON reading_plan_progress FOR SELECT
+  USING (true);
+CREATE POLICY "본인 진행 관리" ON reading_plan_progress FOR ALL
+  USING (auth.uid() = user_id);
+
+
+-- ============================================================
+-- 6. PERMISSIONS (GRANTS)
+-- ============================================================
+
+-- service_role 권한 부여 (Admin API 대응)
+GRANT ALL ON TABLE user_profiles TO service_role;
+GRANT ALL ON TABLE reading_plans TO service_role;
+GRANT ALL ON TABLE reading_plan_participants TO service_role;
+GRANT ALL ON TABLE reading_plan_progress TO service_role;
+
+-- authenticated 사용자 권한 부여
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE user_profiles TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE reading_plans TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE reading_plan_participants TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE reading_plan_progress TO authenticated;
+
+-- 시퀀스 권한 부여
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO service_role;

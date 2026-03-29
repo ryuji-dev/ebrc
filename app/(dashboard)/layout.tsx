@@ -14,7 +14,8 @@ import {
   LogOut,
   Menu,
   X,
-  BookOpenText
+  BookOpenText,
+  LandPlot
 } from 'lucide-react';
 
 export default function DashboardLayout({
@@ -62,6 +63,7 @@ export default function DashboardLayout({
     { name: '대시보드', href: '/dashboard', icon: ChartColumnStacked },
     { name: '경건시간', href: '/devotion', icon: Book },
     { name: '성경통독', href: '/reading', icon: BookOpen },
+    { name: '통독 플랜', href: '/plans', icon: LandPlot },
     { name: '프로필', href: '/profile', icon: User },
   ];
 

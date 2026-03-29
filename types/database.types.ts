@@ -228,6 +228,93 @@ export interface Database {
           updated_at?: string;
         };
       };
+      reading_plans: {
+        Row: {
+          id: string;
+          title: string;
+          description: string | null;
+          created_by: string;
+          book_ids: number[];
+          total_chapters: number;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          description?: string | null;
+          created_by: string;
+          book_ids: number[];
+          total_chapters: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          description?: string | null;
+          created_by?: string;
+          book_ids?: number[];
+          total_chapters?: number;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      reading_plan_participants: {
+        Row: {
+          id: string;
+          plan_id: string;
+          user_id: string;
+          joined_at: string;
+          completed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          plan_id: string;
+          user_id: string;
+          joined_at?: string;
+          completed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          plan_id?: string;
+          user_id?: string;
+          joined_at?: string;
+          completed_at?: string | null;
+        };
+      };
+      reading_plan_progress: {
+        Row: {
+          id: string;
+          plan_id: string;
+          user_id: string;
+          book_id: number;
+          chapter: number;
+          completed_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          plan_id: string;
+          user_id: string;
+          book_id: number;
+          chapter: number;
+          completed_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          plan_id?: string;
+          user_id?: string;
+          book_id?: number;
+          chapter?: number;
+          completed_at?: string;
+          deleted_at?: string | null;
+        };
+      };
       user_bible_progress: {
         Row: {
           id: string;

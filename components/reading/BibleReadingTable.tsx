@@ -196,7 +196,7 @@ export function BibleReadingTable({ progress, cumulativeReadCount: initialManual
                     completed_at: new Date().toISOString(),
                     deleted_at: null
                 }));
-                // We actually want to keep old completed_at if possible, 
+                // We actually want to keep old completed_at if possible,
                 // but for optimistic UI simplicity, we'll just check if it was already there (even deleted)
                 const restoredEntries = prev
                     .filter(p => Number(p.book_id) === bookId && Number(p.year) === Number(selectedYear))
