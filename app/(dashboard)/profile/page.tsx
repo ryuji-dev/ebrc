@@ -74,7 +74,7 @@ export default async function ProfilePage() {
                 </div>
                 <div className="text-left">
                   <div className="text-white group-hover:text-rose-500 transition-colors duration-300">로그아웃</div>
-                  <div className="text-xs text-zinc-500">Biblian 365 세션을 종료합니다.</div>
+                  <div className="text-xs text-zinc-500">EBRC 세션을 종료합니다.</div>
                 </div>
               </div>
             </Button>

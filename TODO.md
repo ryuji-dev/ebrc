@@ -1,21 +1,20 @@
-# 📋 Project: Authentication Process Enhancement (UX/UI & Validation)
+# 📋 UI/UX Refinement: Bible Reading Table (`/reading`)
 
-## 1. UX/UI Improvements
-- **Notifications**: Implement **'Sonner'** for all toast notifications (success, error, warning). Replace standard alerts or existing toast libraries with Sonner for a more polished look.
-- **Form Validation**: Use **'Zod'** to implement schema-based validation for all auth inputs (Sign-up, Log-in, Password Reset). 
-  - Ensure clear error messages are displayed for invalid email formats, password length, etc.
+## 1. Issue: Chapter List Layout Fix
+- **Current State**: The chapter numbers (1, 2, 3...) are currently misaligned or displayed in an unintended layout (as seen in the first attached screenshot).
+- **Goal**: Refactor the chapter grid/list layout to match the second screenshot. 
+  - Each chapter should be in a clean, square or circular grid format.
+  - Ensure the responsive grid remains consistent across different screen sizes.
+  - Fix any flexbox or grid CSS that might be causing the current misalignment.
 
-## 2. Expanded Auth Features
-- **Find ID / Reset Password**: 
-  - Implement a "Find ID" flow (if applicable) or a robust "Forgot Password" flow.
-  - **Password Reset Verification**: Review and ensure the current password reset logic is fully functional. Please verify the integration with Supabase Auth (email link → reset page → password update).
-- **Default Role Assignment**: Confirm that every new user is automatically assigned the `user` role in the database upon successful registration. 
-  - *Note: Admin roles will be manually assigned via the DB by the developer.*
+## 2. Issue: Visual Distinction for New Testament
+- **Current State**: Both Old Testament (OT) and New Testament (NT) sections use the same theme color (Indigo).
+- **Goal**: Change the theme color for the **New Testament (신약)** sections to Tailwind CSS **`rose`** colors.
+  - Apply `rose-500` or `rose-600` for active/checked states and accents in the NT section.
+  - Keep the Old Testament (구약) as the current color (Indigo).
+  - This applies to progress bars, chapter check icons, and section headers within the NT.
 
-## 3. Detailed Task Requirements
-1. **Zod Schemas**: Create reusable Zod schemas for `loginSchema`, `signupSchema`, and `resetPasswordSchema`.
-2. **Sonner Integration**: Wrap the main layout with the Sonner provider and trigger `toast.success()` or `toast.error()` during the auth lifecycle (e.g., "Welcome back!", "Check your email", "Invalid credentials").
-3. **Password Reset Flow**: 
-   - Ensure the `update password` page is protected and only accessible via a valid reset token/session.
-   - Verify that the UI handles expired or invalid reset links gracefully.
-4. **Clean Slate**: Ensure these changes align with the previously requested `admin/user` simplified role system.
+## 3. Technical Requirements
+- Check `app/(dashboard)/reading/page.tsx` or the relevant sub-components in `components/reading/`.
+- Use Tailwind CSS classes for the color change.
+- Ensure the **Optimistic Update** logic remains intact while updating the UI components.

@@ -304,7 +304,7 @@ export function BibleReadingTable({ progress, cumulativeReadCount: initialManual
                                         className={cn(
                                             "p-2 rounded-lg transition-colors hover:bg-white/5",
                                             isBulkLoading ? "animate-pulse" : `text-zinc-500 ${theme === 'indigo' ? 'hover:text-indigo-400' : 'hover:text-rose-400'}`,
-                                            isCompleted && "text-primary hover:text-primary"
+                                            isCompleted && (theme === 'indigo' ? "text-indigo-500 hover:text-indigo-500" : "text-rose-500 hover:text-rose-500")
                                         )}
                                         title={isCompleted ? "전체 해제" : "전체 선택"}
                                     >
@@ -320,7 +320,7 @@ export function BibleReadingTable({ progress, cumulativeReadCount: initialManual
                             </div>
 
                             {isExpanded && (
-                                <div className="mt-2 p-4 bg-zinc-900/50 border border-white/5 rounded-2xl animate-in fade-in slide-in-from-top-2">
+                                <div className="mt-2 p-4 bg-zinc-900/50 border border-white/5 rounded-2xl animate-in fade-in slide-in-from-top-2 grid grid-cols-10 gap-2">
                                         {Array.from({ length: book.chapters }, (_, i) => i + 1).map(chapter => {
                                             const done = completedChapters.includes(chapter);
                                             // Optimistic UI: Don't disable or show pulse for individual chapter clicks
@@ -330,7 +330,7 @@ export function BibleReadingTable({ progress, cumulativeReadCount: initialManual
                                                     key={chapter}
                                                     onClick={() => toggleChapter(book.id, chapter)}
                                                     className={cn(
-                                                        "aspect-square rounded-lg flex items-center justify-center text-xs font-medium transition-all",
+                                                        "aspect-square rounded-full flex items-center justify-center text-xs font-medium transition-all",
                                                         done
                                                             ? colors.chapterDone + " text-white"
                                                             : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700",
@@ -465,10 +465,10 @@ export function BibleReadingTable({ progress, cumulativeReadCount: initialManual
 
                 <section>
                     <h2 className="text-xl text-white mb-6 flex items-center gap-2">
-                        <div className="w-2 h-6 bg-indigo-500 rounded-full" />
+                        <div className="w-2 h-6 bg-rose-500 rounded-full" />
                         신약 성경 (New Testament)
                     </h2>
-                    {renderBookList(BIBLE_BOOKS.filter(b => b.category === 'New'), 'indigo')}
+                    {renderBookList(BIBLE_BOOKS.filter(b => b.category === 'New'), 'rose')}
                 </section>
             </div>
         </div>
