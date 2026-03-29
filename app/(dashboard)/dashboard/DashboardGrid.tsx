@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Book, BookOpen, Trophy, Flame, LandPlot, Settings2 } from 'lucide-react';
+import { Book, BookOpen, Trophy, Flame, LandPlot } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { CustomizeDialog } from './CustomizeDialog';
 
 interface DashboardGridProps {
@@ -19,11 +18,11 @@ interface DashboardGridProps {
   };
 }
 
-export type WidgetId = 
-  | 'today-devotion' 
-  | 'monthly-activity' 
-  | 'plan-status' 
-  | 'annual-progress' 
+export type WidgetId =
+  | 'today-devotion'
+  | 'monthly-activity'
+  | 'plan-status'
+  | 'annual-progress'
   | 'cumulative-completion';
 
 export interface WidgetSetting {
@@ -60,7 +59,7 @@ export function DashboardGrid({ stats }: DashboardGridProps) {
         const ordered = parsed
           .map((p: any) => merged.find(m => m.id === p.id))
           .filter(Boolean) as WidgetSetting[];
-        
+
         // 누락된 신규 위젯 추가
         const missing = merged.filter(m => !ordered.find(o => o.id === m.id));
         setSettings([...ordered, ...missing]);
@@ -203,7 +202,7 @@ export function DashboardGrid({ stats }: DashboardGridProps) {
         <h2 className="text-lg font-semibold text-zinc-200">나의 현황</h2>
         <CustomizeDialog settings={settings} onSave={saveSettings} />
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
         {settings
           .filter(s => s.visible)

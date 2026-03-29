@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, memo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BIBLE_BOOKS, TOTAL_CHAPTERS, BibleBook } from '@/lib/constants/bible';
@@ -237,118 +237,145 @@ export function BibleReadingTable({ progress, cumulativeReadCount: initialManual
         }
     };
 
-    const renderBookList = (books: BibleBook[], theme: 'indigo' | 'rose') => {
-        const colorClasses = {
-            indigo: {
-                bg: "bg-indigo-500/5",
-                border: "border-indigo-500/20",
-                hover: "hover:border-indigo-500/40",
-                iconBg: "bg-indigo-500/20",
-                iconText: "text-indigo-500",
-                chapterDone: "bg-indigo-600",
-                progress: "bg-indigo-500"
-            },
-            rose: {
-                bg: "bg-rose-500/5",
-                border: "border-rose-500/20",
-                hover: "hover:border-rose-500/40",
-                iconBg: "bg-rose-500/20",
-                iconText: "text-rose-500",
-                chapterDone: "bg-rose-500",
-                progress: "bg-rose-500"
-            }
-        };
+const COLOR_CLASSES = {
+    indigo: {
+        bg: "bg-indigo-500/5",
+        border: "border-indigo-500/20",
+        hover: "hover:border-indigo-500/40",
+        iconBg: "bg-indigo-500/20",
+        iconText: "text-indigo-500",
+        chapterDone: "bg-indigo-600",
+        progress: "bg-indigo-500"
+    },
+    rose: {
+        bg: "bg-rose-500/5",
+        border: "border-rose-500/20",
+        hover: "hover:border-rose-500/40",
+        iconBg: "bg-rose-500/20",
+        iconText: "text-rose-500",
+        chapterDone: "bg-rose-500",
+        progress: "bg-rose-500"
+    }
+} as const;
 
-        const colors = colorClasses[theme];
+interface ChapterButtonProps {
+    chapter: number;
+    done: boolean;
+    theme: 'indigo' | 'rose';
+    onClick: () => void;
+}
 
-        return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {books.map(book => {
-                    const completedChapters = bookProgress[book.id] || [];
-                    const isCompleted = completedChapters.length === book.chapters;
-                    const isExpanded = expandedBookId === book.id;
-                    const isBulkLoading = loading[`all-${book.id}`];
+const ChapterButton = memo(({ chapter, done, theme, onClick }: ChapterButtonProps) => {
+    const colors = COLOR_CLASSES[theme];
+    return (
+        <button
+            onClick={onClick}
+            className={cn(
+                "aspect-square rounded-full flex items-center justify-center text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-primary/50",
+                done
+                    ? colors.chapterDone + " text-white"
+                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700",
+            )}
+        >
+            {chapter}
+        </button>
+    );
+});
 
-                    return (
-                        <div key={book.id} className="flex flex-col">
-                            <div className={cn(
-                                "w-full p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between",
-                                isCompleted
-                                    ? `${colors.bg} ${colors.border} ${colors.hover}`
-                                    : "bg-white/5 border-white/10 hover:border-white/20",
-                                isExpanded && (theme === 'indigo' ? "ring-2 ring-indigo-500/50" : "ring-2 ring-rose-500/50")
-                            )}>
-                                <button
-                                    onClick={() => setExpandedBookId(isExpanded ? null : book.id)}
-                                    className="flex items-center gap-3 flex-1 text-left"
-                                >
-                                    <div className={cn(
-                                        "w-10 h-10 rounded-xl flex items-center justify-center",
-                                        isCompleted
-                                            ? colors.iconBg + " " + colors.iconText
-                                            : `${colors.iconBg.replace('20', '10')} ${colors.iconText}`
-                                    )}>
-                                        <Book className="w-5 h-5" />
-                                    </div>
-                                    <div className="text-left">
-                                        <h3 className="text-white">{book.name}</h3>
-                                        <p className="text-xs text-zinc-500">
-                                            {completedChapters.length} / {book.chapters} 장 읽음
-                                        </p>
-                                    </div>
-                                </button>
-                                <div className="flex items-center gap-1">
-                                    <button
-                                        disabled={isBulkLoading}
-                                        onClick={() => toggleAllChapters(book.id)}
-                                        className={cn(
-                                            "p-2 rounded-lg transition-colors hover:bg-white/5",
-                                            isBulkLoading ? "animate-pulse" : `text-zinc-500 ${theme === 'indigo' ? 'hover:text-indigo-400' : 'hover:text-rose-400'}`,
-                                            isCompleted && (theme === 'indigo' ? "text-indigo-500 hover:text-indigo-500" : "text-rose-500 hover:text-rose-500")
-                                        )}
-                                        title={isCompleted ? "전체 해제" : "전체 선택"}
-                                    >
-                                        {isCompleted ? <RotateCcw className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
-                                    </button>
-                                    <button
-                                        onClick={() => setExpandedBookId(isExpanded ? null : book.id)}
-                                        className="p-2 text-zinc-500"
-                                    >
-                                        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                                    </button>
-                                </div>
-                            </div>
+ChapterButton.displayName = 'ChapterButton';
 
-                            {isExpanded && (
-                                <div className="mt-2 p-4 bg-zinc-900/50 border border-white/5 rounded-2xl animate-in fade-in slide-in-from-top-2 grid grid-cols-10 gap-2">
-                                        {Array.from({ length: book.chapters }, (_, i) => i + 1).map(chapter => {
-                                            const done = completedChapters.includes(chapter);
-                                            // Optimistic UI: Don't disable or show pulse for individual chapter clicks
-                                            // to make it feel "instant" as requested by the user.
-                                            return (
-                                                <button
-                                                    key={chapter}
-                                                    onClick={() => toggleChapter(book.id, chapter)}
-                                                    className={cn(
-                                                        "aspect-square rounded-full flex items-center justify-center text-xs font-medium transition-all",
-                                                        done
-                                                            ? colors.chapterDone + " text-white"
-                                                            : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700",
-                                                        // No pulse or opacity here for instant feel
-                                                    )}
-                                                >
-                                                    {chapter}
-                                                </button>
-                                            );
-                                        })}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+interface BookItemProps {
+    book: BibleBook;
+    completedChapters: number[];
+    isExpanded: boolean;
+    isBulkLoading: boolean;
+    theme: 'indigo' | 'rose';
+    onToggleExpand: () => void;
+    onToggleAll: () => void;
+    onToggleChapter: (chapter: number) => void;
+}
+
+const BookItem = memo(({
+    book,
+    completedChapters,
+    isExpanded,
+    isBulkLoading,
+    theme,
+    onToggleExpand,
+    onToggleAll,
+    onToggleChapter
+}: BookItemProps) => {
+    const colors = COLOR_CLASSES[theme];
+    const isCompleted = completedChapters.length === book.chapters;
+
+    return (
+        <div className="flex flex-col">
+            <div className={cn(
+                "w-full p-4 rounded-2xl border transition-all duration-300 flex items-center justify-between",
+                isCompleted
+                    ? `${colors.bg} ${colors.border} ${colors.hover}`
+                    : "bg-white/5 border-white/10 hover:border-white/20",
+                isExpanded && (theme === 'indigo' ? "ring-2 ring-indigo-500/50" : "ring-2 ring-rose-500/50")
+            )}>
+                <button
+                    onClick={onToggleExpand}
+                    className="flex items-center gap-3 flex-1 text-left"
+                >
+                    <div className={cn(
+                        "w-10 h-10 rounded-xl flex items-center justify-center",
+                        isCompleted
+                            ? colors.iconBg + " " + colors.iconText
+                            : `${colors.iconBg.replace('20', '10')} ${colors.iconText}`
+                    )}>
+                        <Book className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                        <h3 className="text-white">{book.name}</h3>
+                        <p className="text-xs text-zinc-500">
+                            {completedChapters.length} / {book.chapters} 장 읽음
+                        </p>
+                    </div>
+                </button>
+                <div className="flex items-center gap-1">
+                    <button
+                        disabled={isBulkLoading}
+                        onClick={onToggleAll}
+                        className={cn(
+                            "p-2 rounded-lg transition-colors hover:bg-white/5",
+                            isBulkLoading ? "animate-pulse" : `text-zinc-500 ${theme === 'indigo' ? 'hover:text-indigo-400' : 'hover:text-rose-400'}`,
+                            isCompleted && (theme === 'indigo' ? "text-indigo-500 hover:text-indigo-500" : "text-rose-500 hover:text-rose-500")
+                        )}
+                        title={isCompleted ? "전체 해제" : "전체 선택"}
+                    >
+                        {isCompleted ? <RotateCcw className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                    </button>
+                    <button
+                        onClick={onToggleExpand}
+                        className="p-2 text-zinc-500"
+                    >
+                        {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </button>
+                </div>
             </div>
-        );
-    };
+
+            {isExpanded && (
+                <div className="mt-2 p-4 bg-zinc-900/50 border border-white/5 rounded-2xl animate-in fade-in slide-in-from-top-2 grid grid-cols-10 gap-2">
+                    {Array.from({ length: book.chapters }, (_, i) => i + 1).map(chapter => (
+                        <ChapterButton
+                            key={chapter}
+                            chapter={chapter}
+                            done={completedChapters.includes(chapter)}
+                            theme={theme}
+                            onClick={() => onToggleChapter(chapter)}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+});
+
+BookItem.displayName = 'BookItem';
 
     return (
         <div className="space-y-8">
@@ -460,7 +487,21 @@ export function BibleReadingTable({ progress, cumulativeReadCount: initialManual
                         <div className="w-2 h-6 bg-indigo-500 rounded-full" />
                         구약 성경 (Old Testament)
                     </h2>
-                    {renderBookList(BIBLE_BOOKS.filter(b => b.category === 'Old'), 'indigo')}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {BIBLE_BOOKS.filter(b => b.category === 'Old').map(book => (
+                            <BookItem
+                                key={book.id}
+                                book={book}
+                                theme="indigo"
+                                completedChapters={bookProgress[book.id] || []}
+                                isExpanded={expandedBookId === book.id}
+                                isBulkLoading={!!loading[`all-${book.id}`]}
+                                onToggleExpand={() => setExpandedBookId(expandedBookId === book.id ? null : book.id)}
+                                onToggleAll={() => toggleAllChapters(book.id)}
+                                onToggleChapter={(chapter) => toggleChapter(book.id, chapter)}
+                            />
+                        ))}
+                    </div>
                 </section>
 
                 <section>
@@ -468,7 +509,21 @@ export function BibleReadingTable({ progress, cumulativeReadCount: initialManual
                         <div className="w-2 h-6 bg-rose-500 rounded-full" />
                         신약 성경 (New Testament)
                     </h2>
-                    {renderBookList(BIBLE_BOOKS.filter(b => b.category === 'New'), 'rose')}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {BIBLE_BOOKS.filter(b => b.category === 'New').map(book => (
+                            <BookItem
+                                key={book.id}
+                                book={book}
+                                theme="rose"
+                                completedChapters={bookProgress[book.id] || []}
+                                isExpanded={expandedBookId === book.id}
+                                isBulkLoading={!!loading[`all-${book.id}`]}
+                                onToggleExpand={() => setExpandedBookId(expandedBookId === book.id ? null : book.id)}
+                                onToggleAll={() => toggleAllChapters(book.id)}
+                                onToggleChapter={(chapter) => toggleChapter(book.id, chapter)}
+                            />
+                        ))}
+                    </div>
                 </section>
             </div>
         </div>

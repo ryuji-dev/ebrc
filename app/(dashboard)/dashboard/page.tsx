@@ -15,39 +15,58 @@ export default async function DashboardPage() {
     return <div>로그인이 필요합니다.</div>;
   }
 
-  // 사용자 프로필 정보
-  const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('full_name, cumulative_readthrough_count')
-    .eq('id', user.id)
-    .single() as { data: { full_name: string; cumulative_readthrough_count: number } | null };
-
-  // 오늘 경건시간 체크 여부 (KST 기준으로 날짜 계산)
   const today = getTodayKST();
-  const { data: todayCheckinRows } = await supabase
-    .from('devotion_checkins')
-    .select('id')
-    .eq('user_id', user.id)
-    .eq('checkin_date', today)
-    .is('parent_id', null) as { data: { id: string }[] | null };
-  const todayCheckin = todayCheckinRows && todayCheckinRows.length > 0 ? todayCheckinRows[0] : null;
-
-  // 이번 달 경건시간 횟수 (KST 기준)
   const firstDayOfMonth = getFirstDayOfMonthKST();
-  const { count: monthCheckins } = await supabase
-    .from('devotion_checkins')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .gte('checkin_date', firstDayOfMonth);
 
-  // 현재 연도 통독 진행률 (KST 기준)
+  // Parallelize independent queries
+  const [
+    profileResponse,
+    todayCheckinResponse,
+    monthCheckinsResponse,
+    allProgressResponse,
+    userPlansResponse
+  ] = await Promise.all([
+    supabase
+      .from('user_profiles')
+      .select('full_name, cumulative_readthrough_count')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('devotion_checkins')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('checkin_date', today)
+      .is('parent_id', null),
+    supabase
+      .from('devotion_checkins')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('checkin_date', firstDayOfMonth),
+    supabase
+      .from('user_bible_progress')
+      .select('book_id, chapter, year, deleted_at')
+      .eq('user_id', user.id)
+      .is('deleted_at', null),
+    supabase
+      .from('reading_plan_participants')
+      .select(`
+        plan_id,
+        reading_plans (
+          total_chapters
+        )
+      `)
+      .eq('user_id', user.id)
+  ]);
+
+  const profile = profileResponse.data as { full_name: string; cumulative_readthrough_count: number } | null;
+  const todayCheckinRows = todayCheckinResponse.data as { id: string }[] | null;
+  const todayCheckin = todayCheckinRows && todayCheckinRows.length > 0 ? todayCheckinRows[0] : null;
+  const monthCheckins = monthCheckinsResponse.count;
+  const allProgress = allProgressResponse.data as { book_id: number; chapter: number; year: number; deleted_at: string | null }[] | null;
+  const userPlans = userPlansResponse.data as { plan_id: string; reading_plans: { total_chapters: number } }[] | null;
+
+  // Post-processing
   const currentYear = new Date(today).getFullYear();
-  const { data: allProgress } = await supabase
-    .from('user_bible_progress')
-    .select('book_id, chapter, year, deleted_at')
-    .eq('user_id', user.id)
-    .is('deleted_at', null) as { data: { book_id: number; chapter: number; year: number; deleted_at: string | null }[] | null };
-
   const currentYearProgress = allProgress?.filter(p => Number(p.year) === currentYear) || [];
   const readingProgress = Math.round((currentYearProgress.length / TOTAL_CHAPTERS) * 100);
 
@@ -61,17 +80,6 @@ export default async function DashboardPage() {
 
   const calculatedCumulativeReads = Object.values(yearGroups).filter(set => set.size === TOTAL_CHAPTERS).length;
   const cumulativeReads = calculatedCumulativeReads + (profile?.cumulative_readthrough_count || 0);
-
-  // 참여 중인 모든 플랜의 전체 진행률 계산
-  const { data: userPlans } = await supabase
-    .from('reading_plan_participants')
-    .select(`
-      plan_id,
-      reading_plans (
-        total_chapters
-      )
-    `)
-    .eq('user_id', user.id) as { data: { plan_id: string; reading_plans: { total_chapters: number } }[] | null };
 
   const planIds = userPlans?.map(p => p.plan_id) || [];
   let overallPlanProgress = 0;
