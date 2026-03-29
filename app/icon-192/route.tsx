@@ -7,7 +7,7 @@ export async function GET() {
         (
             <div
         style= {{
-        background: 'hsl(262, 83%, 65%)',
+        background: '#1e1b4b',
         width: '100%',
         height: '100%',
         display: 'flex',
