@@ -50,7 +50,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         }
 
         // 3. 각 참가자별 완료된 챕터 수 조회 (RPC로 DB에서 집계 — 1000행 제한 우회)
-        const { data: progressRows } = await adminClient
+        const { data: progressRows } = await (adminClient as any)
             .rpc("get_plan_progress_counts", { p_plan_id: planId });
 
         const progressMap: Record<string, number> = {};

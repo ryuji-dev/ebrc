@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
         const userIds = plans.map((p: any) => p.user_id);
 
         // user_id별로 OT/NT 챕터 수 집계 (RPC로 DB에서 집계 — 1000행 제한 우회)
-        const { data: progressRows } = await adminClient
+        const { data: progressRows } = await (adminClient as any)
             .rpc("get_bible_progress_counts", { p_year: year });
 
         const progressMap: Record<string, { ot: number; nt: number }> = {};
