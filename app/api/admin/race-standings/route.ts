@@ -47,23 +47,19 @@ export async function GET(req: NextRequest) {
         // 각 참가자의 챕터 진행률 조회
         const userIds = plans.map((p: any) => p.user_id);
 
-        const { data: progressRows } = await (adminClient
-            .from("user_bible_progress") as any)
-            .select("user_id, book_id")
-            .in("user_id", userIds)
-            .eq("year", year)
-            .is("deleted_at", null);
+        // user_id별로 OT/NT 챕터 수 집계 (RPC로 DB에서 집계 — 1000행 제한 우회)
+        const { data: progressRows } = await adminClient
+            .rpc("get_bible_progress_counts", { p_year: year });
 
-        // user_id별로 OT/NT 챕터 수 집계
         const progressMap: Record<string, { ot: number; nt: number }> = {};
         for (const row of (progressRows || [])) {
             if (!progressMap[row.user_id]) {
                 progressMap[row.user_id] = { ot: 0, nt: 0 };
             }
             if (row.book_id >= 1 && row.book_id <= 39) {
-                progressMap[row.user_id].ot++;
+                progressMap[row.user_id].ot += Number(row.chapter_count);
             } else if (row.book_id >= 40 && row.book_id <= 66) {
-                progressMap[row.user_id].nt++;
+                progressMap[row.user_id].nt += Number(row.chapter_count);
             }
         }
 

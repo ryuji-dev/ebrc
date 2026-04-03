@@ -14,7 +14,8 @@ export default async function BibleReadingPage() {
         .select("book_id, chapter, year, completed_at, deleted_at")
         .eq("user_id", user.id)
         .is("deleted_at", null)
-        .order("completed_at", { ascending: false });
+        .order("completed_at", { ascending: false })
+        .limit(1500);
 
     // Get cumulative read count from profile
     const { data: profile } = await (supabase

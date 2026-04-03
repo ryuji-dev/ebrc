@@ -254,6 +254,33 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 
+-- 통독 플랜 순위용: plan_id별 user_id당 완료 챕터 수 집계 (1000행 제한 우회)
+CREATE OR REPLACE FUNCTION get_plan_progress_counts(p_plan_id UUID)
+RETURNS TABLE(user_id UUID, completed_chapters BIGINT) AS $$
+BEGIN
+  RETURN QUERY
+    SELECT rpp.user_id, COUNT(*)::BIGINT AS completed_chapters
+    FROM reading_plan_progress rpp
+    WHERE rpp.plan_id = p_plan_id
+      AND rpp.deleted_at IS NULL
+    GROUP BY rpp.user_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 성경 통독 레이스용: year별 user_id + book_id당 챕터 수 집계 (1000행 제한 우회)
+CREATE OR REPLACE FUNCTION get_bible_progress_counts(p_year INTEGER)
+RETURNS TABLE(user_id UUID, book_id INTEGER, chapter_count BIGINT) AS $$
+BEGIN
+  RETURN QUERY
+    SELECT ubp.user_id, ubp.book_id, COUNT(*)::BIGINT AS chapter_count
+    FROM user_bible_progress ubp
+    WHERE ubp.year = p_year
+      AND ubp.deleted_at IS NULL
+    GROUP BY ubp.user_id, ubp.book_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+
 -- ============================================================
 -- 5. ROW LEVEL SECURITY (RLS)
 -- ============================================================

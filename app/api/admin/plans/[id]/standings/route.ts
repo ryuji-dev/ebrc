@@ -49,16 +49,13 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
             profileMap[prof.id] = prof.full_name;
         }
 
-        // 3. 각 참가자별 완료된 챕터 수 조회
-        const { data: progressRows } = await (adminClient.from("reading_plan_progress") as any)
-            .select("user_id")
-            .eq("plan_id", planId)
-            .in("user_id", userIds)
-            .is("deleted_at", null);
+        // 3. 각 참가자별 완료된 챕터 수 조회 (RPC로 DB에서 집계 — 1000행 제한 우회)
+        const { data: progressRows } = await adminClient
+            .rpc("get_plan_progress_counts", { p_plan_id: planId });
 
         const progressMap: Record<string, number> = {};
         for (const row of (progressRows || [])) {
-            progressMap[row.user_id] = (progressMap[row.user_id] || 0) + 1;
+            progressMap[row.user_id] = Number(row.completed_chapters);
         }
 
         // 4. 데이터 병합
