@@ -48,7 +48,8 @@ export async function POST(req: NextRequest) {
                 .select("chapter")
                 .eq("user_id", user.id)
                 .eq("book_id", bookId)
-                .eq("year", year);
+                .eq("year", year)
+                .limit(200);
 
             const existingChapterNums = new Set(existingChapters?.map((c: any) => c.chapter) || []);
             const missingRecords = [];

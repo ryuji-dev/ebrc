@@ -18,12 +18,32 @@ export default async function DashboardPage() {
   const today = getTodayKST();
   const firstDayOfMonth = getFirstDayOfMonthKST();
 
+  // 성경 진행 데이터 페이지네이션 (Supabase max_rows 1000행 제한 우회)
+  async function fetchAllBibleProgress() {
+    const PAGE_SIZE = 1000;
+    let all: { book_id: number; chapter: number; year: number; deleted_at: string | null }[] = [];
+    let from = 0;
+    while (true) {
+      const { data } = await supabase
+        .from('user_bible_progress')
+        .select('book_id, chapter, year, deleted_at')
+        .eq('user_id', user!.id)
+        .is('deleted_at', null)
+        .range(from, from + PAGE_SIZE - 1);
+      if (!data || data.length === 0) break;
+      all = all.concat(data as any);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    return all;
+  }
+
   // Parallelize independent queries
   const [
     profileResponse,
     todayCheckinResponse,
     monthCheckinsResponse,
-    allProgressResponse,
+    allProgress,
     userPlansResponse
   ] = await Promise.all([
     supabase
@@ -42,11 +62,7 @@ export default async function DashboardPage() {
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .gte('checkin_date', firstDayOfMonth),
-    supabase
-      .from('user_bible_progress')
-      .select('book_id, chapter, year, deleted_at')
-      .eq('user_id', user.id)
-      .is('deleted_at', null),
+    fetchAllBibleProgress(),
     supabase
       .from('reading_plan_participants')
       .select(`
@@ -62,7 +78,6 @@ export default async function DashboardPage() {
   const todayCheckinRows = todayCheckinResponse.data as { id: string }[] | null;
   const todayCheckin = todayCheckinRows && todayCheckinRows.length > 0 ? todayCheckinRows[0] : null;
   const monthCheckins = monthCheckinsResponse.count;
-  const allProgress = allProgressResponse.data as { book_id: number; chapter: number; year: number; deleted_at: string | null }[] | null;
   const userPlans = userPlansResponse.data as { plan_id: string; reading_plans: { total_chapters: number } }[] | null;
 
   // Post-processing

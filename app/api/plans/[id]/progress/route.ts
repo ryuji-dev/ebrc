@@ -3,15 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 import { BIBLE_BOOKS } from "@/lib/constants/bible";
 
 async function checkAndUpdateCompletion(supabase: any, userId: string, planId: string, totalChapters: number, bookIds: number[]) {
-    // 현재 완료된 챕터 수 조회
-    const { data: rows } = await supabase
+    // 현재 완료된 챕터 수 조회 (DB 집계로 1000행 제한 우회)
+    const { count: completedCount } = await supabase
         .from("reading_plan_progress")
-        .select("id")
+        .select("*", { count: "exact", head: true })
         .eq("plan_id", planId)
         .eq("user_id", userId)
         .is("deleted_at", null);
-
-    const completedCount = rows?.length ?? 0;
 
     const { data: participant } = await supabase
         .from("reading_plan_participants")
@@ -22,13 +20,13 @@ async function checkAndUpdateCompletion(supabase: any, userId: string, planId: s
 
     if (!participant) return;
 
-    if (completedCount >= totalChapters && !participant.completed_at) {
+    if ((completedCount ?? 0) >= totalChapters && !participant.completed_at) {
         // 완독!
         await supabase
             .from("reading_plan_participants")
             .update({ completed_at: new Date().toISOString() })
             .eq("id", participant.id);
-    } else if (completedCount < totalChapters && participant.completed_at) {
+    } else if ((completedCount ?? 0) < totalChapters && participant.completed_at) {
         // 완독 취소 (챕터 해제 시)
         await supabase
             .from("reading_plan_participants")
@@ -99,7 +97,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
                 .select("chapter")
                 .eq("plan_id", planId)
                 .eq("user_id", user.id)
-                .eq("book_id", bookId);
+                .eq("book_id", bookId)
+                .limit(200);
 
             const existingSet = new Set((existing || []).map((r: any) => r.chapter));
             const missing = [];

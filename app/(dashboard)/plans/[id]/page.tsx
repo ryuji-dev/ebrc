@@ -29,16 +29,23 @@ export default async function PlanDetailPage({ params }: { params: Promise<{ id:
         .eq("user_id", user.id)
         .maybeSingle();
 
-    // 내 챕터 진행률 (참여 중인 경우)
+    // 내 챕터 진행률 (참여 중인 경우, 페이지네이션으로 1000행 제한 우회)
     let myProgress: any[] = [];
     if (myParticipation) {
-        const { data: progressRows } = await (supabase.from("reading_plan_progress") as any)
-            .select("book_id, chapter, completed_at, deleted_at")
-            .eq("plan_id", planId)
-            .eq("user_id", user.id)
-            .is("deleted_at", null);
-
-        myProgress = progressRows || [];
+        const PAGE_SIZE = 1000;
+        let from = 0;
+        while (true) {
+            const { data } = await (supabase.from("reading_plan_progress") as any)
+                .select("book_id, chapter, completed_at, deleted_at")
+                .eq("plan_id", planId)
+                .eq("user_id", user.id)
+                .is("deleted_at", null)
+                .range(from, from + PAGE_SIZE - 1);
+            if (!data || data.length === 0) break;
+            myProgress = myProgress.concat(data);
+            if (data.length < PAGE_SIZE) break;
+            from += PAGE_SIZE;
+        }
     }
 
     return (

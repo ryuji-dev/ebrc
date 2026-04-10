@@ -8,14 +8,23 @@ export default async function BibleReadingPage() {
 
     if (!user) return null;
 
-    // Get user's bible reading progress
-    const { data: progress } = await (supabase
-        .from("user_bible_progress") as any)
-        .select("book_id, chapter, year, completed_at, deleted_at")
-        .eq("user_id", user.id)
-        .is("deleted_at", null)
-        .order("completed_at", { ascending: false })
-        .limit(1500);
+    // Get user's bible reading progress (페이지네이션으로 1000행 제한 우회)
+    const PAGE_SIZE = 1000;
+    let progress: any[] = [];
+    let from = 0;
+    while (true) {
+        const { data } = await (supabase
+            .from("user_bible_progress") as any)
+            .select("book_id, chapter, year, completed_at, deleted_at")
+            .eq("user_id", user.id)
+            .is("deleted_at", null)
+            .order("completed_at", { ascending: false })
+            .range(from, from + PAGE_SIZE - 1);
+        if (!data || data.length === 0) break;
+        progress = progress.concat(data);
+        if (data.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+    }
 
     // Get cumulative read count from profile
     const { data: profile } = await (supabase
