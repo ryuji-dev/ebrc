@@ -92,6 +92,13 @@ function LoginForm() {
         <div className="space-y-2 group">
           <div className="flex items-center justify-between ml-1">
             <Label htmlFor="password" className="text-xs uppercase tracking-widest text-muted-foreground group-focus-within:text-primary transition-colors">비밀번호</Label>
+            <Link
+              href="/forgot-password"
+              tabIndex={-1}
+              className="text-xs text-muted-foreground/60 hover:text-primary transition-colors mr-1"
+            >
+              비밀번호를 잊으셨나요?
+            </Link>
           </div>
           <Input
             id="password"
