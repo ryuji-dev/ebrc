@@ -44,23 +44,22 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ standings: [] });
         }
 
-        // 각 참가자의 챕터 진행률 조회
-        const userIds = plans.map((p: any) => p.user_id);
+        // user_id당 구약/신약 챕터 수 집계 (RPC로 DB에서 집계 — 1000행 제한 우회)
+        // 사용자당 1행만 반환되므로 참가자가 늘어도 max_rows 상한에 걸리지 않는다.
+        const { data: progressRows, error: progressError } = await (adminClient as any)
+            .rpc("get_bible_progress_totals", { p_year: year });
 
-        // user_id별로 OT/NT 챕터 수 집계 (RPC로 DB에서 집계 — 1000행 제한 우회)
-        const { data: progressRows } = await (adminClient as any)
-            .rpc("get_bible_progress_counts", { p_year: year });
+        if (progressError) {
+            console.error("Race standings progress RPC error:", progressError);
+            return NextResponse.json({ error: progressError.message }, { status: 500 });
+        }
 
         const progressMap: Record<string, { ot: number; nt: number }> = {};
         for (const row of (progressRows || [])) {
-            if (!progressMap[row.user_id]) {
-                progressMap[row.user_id] = { ot: 0, nt: 0 };
-            }
-            if (row.book_id >= 1 && row.book_id <= 39) {
-                progressMap[row.user_id].ot += Number(row.chapter_count);
-            } else if (row.book_id >= 40 && row.book_id <= 66) {
-                progressMap[row.user_id].nt += Number(row.chapter_count);
-            }
+            progressMap[row.user_id] = {
+                ot: Number(row.ot_chapters),
+                nt: Number(row.nt_chapters),
+            };
         }
 
         const standings = plans.map((plan: any) => {

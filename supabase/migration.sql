@@ -267,16 +267,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 성경 통독 레이스용: year별 user_id + book_id당 챕터 수 집계 (1000행 제한 우회)
-CREATE OR REPLACE FUNCTION get_bible_progress_counts(p_year INTEGER)
-RETURNS TABLE(user_id UUID, book_id INTEGER, chapter_count BIGINT) AS $$
+-- 성경 통독 레이스용: year별 user_id당 구약/신약 챕터 수 집계 (1000행 제한 우회)
+-- (user_id, book_id) 단위 집계는 참가자 수 x 66권 만큼 행이 늘어나 PostgREST의
+-- max_rows(1000) 상한에 걸릴 수 있으므로, 사용자당 1행으로 집계한다.
+DROP FUNCTION IF EXISTS get_bible_progress_counts(INTEGER);
+
+CREATE OR REPLACE FUNCTION get_bible_progress_totals(p_year INTEGER)
+RETURNS TABLE(user_id UUID, ot_chapters BIGINT, nt_chapters BIGINT) AS $$
 BEGIN
   RETURN QUERY
-    SELECT ubp.user_id, ubp.book_id, COUNT(*)::BIGINT AS chapter_count
+    SELECT
+      ubp.user_id,
+      COUNT(*) FILTER (WHERE ubp.book_id BETWEEN 1 AND 39)::BIGINT AS ot_chapters,
+      COUNT(*) FILTER (WHERE ubp.book_id BETWEEN 40 AND 66)::BIGINT AS nt_chapters
     FROM user_bible_progress ubp
     WHERE ubp.year = p_year
       AND ubp.deleted_at IS NULL
-    GROUP BY ubp.user_id, ubp.book_id;
+    GROUP BY ubp.user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
